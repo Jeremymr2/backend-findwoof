@@ -20,11 +20,12 @@ from service import (create_user, get_user, update_user, delete_user, create_pet
 from nose_scan import detect_nose_to_json, detect_nose_to_image
 from jose import jwt
 from dotenv import load_dotenv
+from mangum import Mangum
 
 load_dotenv()
 
 app = FastAPI()
-
+handler = Mangum(app)
 
 
 #CORS (Cross-Origin Resource Sharing) middleware, allows the API to be accessed from different domains or origins.
