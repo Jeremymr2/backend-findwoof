@@ -3,8 +3,8 @@ import os
 from fastapi import FastAPI, UploadFile, Depends, File
 from sqlmodel import SQLModel, select, Session
 
-from login import create_token, profile, encode_token, decode_token
-from service import create_imagen_mascota, get_user_by_email
+from app.login import create_token, profile, encode_token, decode_token
+from app.service import create_imagen_mascota, get_user_by_email
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 from PIL import Image
@@ -14,10 +14,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response #handling API responses
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 # Import
-from database import create_db_and_tables, get_session
-from service import (create_user, get_user, update_user, delete_user, create_pet, get_pet, update_pet,
+from app.database import create_db_and_tables, get_session
+from app.service import (create_user, get_user, update_user, delete_user, create_pet, get_pet, update_pet,
                      delete_pet, get_pets_by_user, get_image_profile_by_pet)
-from nose_scan import detect_nose_to_json, detect_nose_to_image
+from app.nose_scan import detect_nose_to_json, detect_nose_to_image
 from jose import jwt
 from dotenv import load_dotenv
 from mangum import Mangum

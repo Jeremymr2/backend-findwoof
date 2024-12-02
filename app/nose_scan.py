@@ -1,6 +1,6 @@
 import json
 
-from segmentation import get_image_from_bytes, get_yolov5
+from app.segmentation import get_image_from_bytes, get_yolov5
 from fastapi import UploadFile
 import io
 from PIL import Image

@@ -2,11 +2,11 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from database import get_session
+from app.database import get_session
 
-from service import get_user_by_email
-from modelos import Usuario
-from service import get_user
+from app.service import get_user_by_email
+# from modelos import Usuario
+# from service import get_user
 from jose import jwt
 import os
 from dotenv import load_dotenv

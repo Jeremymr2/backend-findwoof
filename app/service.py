@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import UploadFile
 import boto3
-from modelos import Usuario, Mascota, ImagenMascota
+from app.modelos import Usuario, Mascota, ImagenMascota
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 import os
