@@ -14,11 +14,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response #handling API responses
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 # Import
+import io
 from app.database import create_db_and_tables, get_session
 from app.service import (create_user, get_user, update_user, delete_user, create_pet, get_pet, update_pet,
-                     delete_pet, get_pets_by_user, get_image_profile_by_pet)
+                     delete_pet, get_pets_by_user, get_image_profile_by_pet,all_imagen_mascota_nariz)
 from app.nose_scan import detect_nose_to_json, detect_nose_to_image
-from jose import jwt
 from dotenv import load_dotenv
 
 load_dotenv()

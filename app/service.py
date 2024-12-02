@@ -116,6 +116,10 @@ def delete_imagen_mascota(db: Session, id_imagen_mascota: int) -> None:
     db.commit()
 
 # Servicios extras
+def all_imagen_mascota_nariz(db: Session) -> List[ImagenMascota]:
+    imagenes_nariz = db.query(ImagenMascota).filter(ImagenMascota.tipo_imagen == "nariz").all()
+    return imagenes_nariz
+
 def get_pets_by_user(db: Session, id_usuario: str) -> List[Mascota]:
     return db.query(Mascota).filter(Mascota.id_usuario == id_usuario).all()
 

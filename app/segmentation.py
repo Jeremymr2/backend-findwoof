@@ -1,11 +1,13 @@
 import torch
 from PIL import Image
 import io
+from pathlib import Path
 
+model_path = Path("./app/models/best.pt")
 
 def get_yolov5():
     # local best.pt
-    model = torch.hub.load('./yolov5', 'custom', path='./app/models/best.pt', source='local', force_reload=True)  # local repo
+    model = torch.hub.load('./yolov5', 'custom', path=model_path, source='local', force_reload=True)  # local repo
     model.conf = 0.5
     return model
 
