@@ -1,3 +1,4 @@
+
 def predict(image_input):
     img = Image.open(image_input)
     img = img.resize((224, 224))
