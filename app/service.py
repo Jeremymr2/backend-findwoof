@@ -1,10 +1,15 @@
 from typing import List
+
+import numpy as np
 from fastapi import UploadFile
 import boto3
 from app.modelos import Usuario, Mascota, ImagenMascota
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 import os
+import requests
+import cv2
+from app.predict import preprocess_numpy, reshape_numpy
 
 load_dotenv()
 
@@ -19,10 +24,9 @@ s3 = boto3.client('s3',
                   aws_access_key_id=aws_access_key_id,
                   aws_secret_access_key=aws_secret_access_key)
 
-
 # CRUD USER
-def create_user(db: Session, nombre: str, dni: str, email: str, password: str) -> Usuario:
-    db_usuario = Usuario(nombre=nombre, dni=dni, email=email, password=password)
+def create_user(db: Session, nombre: str, apellido: str, telefono: str, dni: str, email: str, password: str) -> Usuario:
+    db_usuario = Usuario(nombre=nombre, apellido=apellido, telefono=telefono, dni=dni, email=email, password=password)
     db.add(db_usuario)
     db.commit()
     db.refresh(db_usuario)
@@ -34,7 +38,8 @@ def get_user(db: Session, id_usuario: str) -> Usuario:
 def get_user_by_email(db: Session, email_usuario: str) -> Usuario:
     return db.query(Usuario).filter(Usuario.email == email_usuario).first()
 
-def update_user(db: Session, id_usuario: str, nombre: str, dni: str, email: str, password: str) -> Usuario:
+def update_user(db: Session, id_usuario: str, nombre: str, apellido: str,
+                telefono: str, dni: str, email: str, password: str) -> Usuario:
     db_usuario = get_user(db, id_usuario)
     db_usuario.nombre = nombre
     db_usuario.dni = dni
@@ -116,7 +121,42 @@ def delete_imagen_mascota(db: Session, id_imagen_mascota: int) -> None:
     db.commit()
 
 # Servicios extras
-def all_imagen_mascota_nariz(db: Session) -> List[ImagenMascota]:
+
+def compare_to_all(db: Session,model, img):
+    umbral = 0
+    best = 0
+    np_array = np.frombuffer(img, dtype=np.uint8)
+    img = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+    img_numpy = preprocess_numpy(img)
+    img_numpy = reshape_numpy(img_numpy)
+
+    # traer todas las imagenes_mascota de narices de la bd
+    imagenes_bd = all_mascota_nariz(db)
+
+    # llamar urls
+    for imagen_mascota in imagenes_bd:
+        try:
+            url = imagen_mascota.url_imagen
+            response = requests.get(url)
+            response.raise_for_status()  # Lanza una excepción si la descarga falla
+            np_url = np.frombuffer(response.content, dtype=np.uint8)
+            img_url = cv2.imdecode(np_url, cv2.IMREAD_COLOR)
+            img_url = preprocess_numpy(img_url)
+            img_url = reshape_numpy(img_url)
+            result = model.predict([img_numpy, img_url])
+            if result > umbral:
+                umbral = result
+                best = imagen_mascota
+        except requests.exceptions.RequestException as e:
+            print(f"Error descargando la imagen: {url} - {e}")
+        except cv2.error as e:
+            print(f"Error procesando la imagen: {url} - {e}")
+    if umbral > 0.8:
+        return best
+    return None
+
+
+def all_mascota_nariz(db: Session) -> List[ImagenMascota]:
     imagenes_nariz = db.query(ImagenMascota).filter(ImagenMascota.tipo_imagen == "nariz").all()
     return imagenes_nariz
 

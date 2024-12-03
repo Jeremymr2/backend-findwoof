@@ -4,7 +4,7 @@ from fastapi import FastAPI, UploadFile, Depends, File
 from sqlmodel import SQLModel, select, Session
 
 from app.login import create_token, profile, encode_token, decode_token
-from app.service import create_imagen_mascota, get_user_by_email
+from app.service import create_imagen_mascota, get_user_by_email, compare_to_all, all_mascota_nariz
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 from PIL import Image
@@ -17,9 +17,10 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 import io
 from app.database import create_db_and_tables, get_session
 from app.service import (create_user, get_user, update_user, delete_user, create_pet, get_pet, update_pet,
-                     delete_pet, get_pets_by_user, get_image_profile_by_pet,all_imagen_mascota_nariz)
+                     delete_pet, get_pets_by_user)
 from app.nose_scan import detect_nose_to_json, detect_nose_to_image
 from dotenv import load_dotenv
+from app.predict import load_model
 
 load_dotenv()
 
@@ -81,11 +82,11 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Sessio
     return {"access_token": token}
 
 @app.get("/usuario/profile")
-def usuario_profile(my_user: Annotated[dict, Depends(decode_token)]):
+def usuario_perfil(my_user: Annotated[dict, Depends(decode_token)]):
     return my_user
 
 @app.post("/usuario/mascota")
-def usuario_mascota(nombre: str, edad: int, sexo: bool,
+def usuario_crear_mascota(nombre: str, edad: int, sexo: bool,
                     estado_mascota: bool, id_raza: int, descripcion: str, vacunas: bool, condicion_clinica: bool,
                     my_user: Annotated[dict, Depends(decode_token)], db: Session = Depends(get_session)):
     # id usuario autenticado
@@ -97,22 +98,22 @@ def usuario_mascota(nombre: str, edad: int, sexo: bool,
     return db_mascota
 
 # USUARIOS
-@app.post("/usuarios")
-def crear_usuario(nombre: str, dni: str, email: str, password: str, db:Session = Depends(get_session)):
-    db_usuario = create_user(db, nombre, dni, email, password)
+@app.post("/usuario")
+def crear_usuario(nombre: str, apellido: str, telefono: str, dni: str, email: str, password: str, db:Session = Depends(get_session)):
+    db_usuario = create_user(db, nombre, apellido, telefono, dni, email, password)
     return db_usuario
 
-@app.get("/usuarios/{id}")
+@app.get("/usuario/{id}")
 def obtener_usuario(id: str, db:Session = Depends(get_session)):
     db_usuario = get_user(db, id)
     return db_usuario
 
-@app.put("/usuarios/{id}")
-def actualizar_usuario(id_usuario: str, nombre: str, dni: str, email: str, password: str, db: Session = Depends(get_session)):
-    db_usuario = update_user(db, id_usuario, nombre, dni, email, password)
+@app.put("/usuario/{id}")
+def actualizar_usuario(id_usuario: str, nombre: str, apellido: str, telefono: str, dni: str, email: str, password: str, db: Session = Depends(get_session)):
+    db_usuario = update_user(db, id_usuario, nombre, apellido, telefono, dni, email, password)
     return db_usuario
 
-@app.delete("/usuarios/{id}")
+@app.delete("/usuario/{id}")
 def eliminar_usuario(id_usuario: str, db:Session = Depends(get_session)):
     db_usuario = delete_user(db, id_usuario)
     return db_usuario
@@ -164,6 +165,12 @@ async def detect_nose_image(file: UploadFile):
     binary_image = await file.read()
     response_image = detect_nose_to_image(binary_image)
     return Response(content=response_image.getvalue(), media_type="image/jpeg")
+
+@app.post("/comparar")
+async def comparar_imagen_con_bd(file: UploadFile, db: Session = Depends(get_session), modelo = Depends(load_model)):
+    imagen = await file.read()
+    mascota = compare_to_all(db,modelo, imagen)
+    return mascota
 
 # @app.get("/findpet/{pet_id}")
 # def find_pet(pet_id: int):

@@ -8,7 +8,9 @@ class Usuario(SQLModel, table=True):
 
     id: str = Field(default_factory=shortuuid.uuid, primary_key=True)
     nombre: str
+    apellido: str
     dni: str = Field(sa_column_kwargs={"unique": True})
+    telefono: str = Field(sa_column_kwargs={"unique": True})
     email: str = Field(sa_column_kwargs={"unique": True})
     password: str
     fecha_registro: datetime = Field(default_factory=datetime.utcnow)
